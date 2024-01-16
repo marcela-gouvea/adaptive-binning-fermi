@@ -72,13 +72,12 @@ file = open('config1.yaml','r')
 lista = file.readlines()
 t_min = int(lista[12].split()[1])
 t_max = int(lista[13].split()[1])
-
-if len(lista[15].split()) == 3:
-    source  = str(lista[15].split()[1])+' '+str(lista[15].split()[2])
-    source2 = str(lista[15].split()[1])+'_'+str(lista[15].split()[2])
-else:
-    source  = str(lista[15].split()[1])
-    source2 = str(lista[15].split()[1])
+'''
+source  = str(lista[15].split()[1])+' '+str(lista[15].split()[2])
+source2 = str(lista[15].split()[1])+'_'+str(lista[15].split()[2])
+'''
+source  = str(lista[15].split()[1])
+source2 = str(lista[15].split()[1])
 
 file.close()
 
@@ -130,13 +129,6 @@ while (t_min+(j*unc*86400)) <= t_max:
         if (results['ts'][0]) >= Delta0:
             print("\n                                                          ACCEPTANCE CRITERIA SATISFIED                                                                     \n'")
 
-            directory.append("{}_{}_{}".format(source2,mes,tmax))
-            print(directory)
-            all_folders = [d for d in os.listdir(os.getcwd()) if os.path.isdir(d)]
-            delete = list(set(all_folders) - set(directory))
-
-            for k in delete:
-                subprocess.run('rm -r {}'.format(k), shell=True)
         
             # save the SED values
             np.savetxt('sed.txt', np.c_[sed['dnde'],sed['e2dnde'],sed['e2dnde_err']], delimiter=';', header='dnde;e2dnde;e2dnde_err')
@@ -290,7 +282,16 @@ plt.savefig('lightcurve_{}_{}.png'.format(source2, mes))
 plt.show()
 plt.close()
 
+aaaa = os.listdir(home)
+for i in aaaa:
+    if os.path.isdir(home) == True:
+        subprocess.run( 'cd {}'.format(i) , shell=True )
+        bbb = os.listdir()
+        if bbb.__contains__('sed.txt') == False:
+            subprocess.run( 'cd ..' , shell=True )
+            subprocess.run( 'rm -r {}'.format(i) , shell=True )
 
+    
 for p in range(0, len(central_time)):
     tmin = mjd_to_met(central_time[p]-central_time_err[p])
     tmax = mjd_to_met(central_time[p]+central_time_err[p])
