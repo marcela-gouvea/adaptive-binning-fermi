@@ -4,6 +4,8 @@ import subprocess
 from matplotlib import pyplot as plt #matplotlib.pyplot is the package we will use to plot our light-curve.
 from astropy.table import Table #astropy.table allows us to read fits tables, which is the structure of our ROI file. 
 import os #os lets us easily perform file manipulation within Python.
+import os
+import shutil
 
 def met_to_mjd(time):
     #Convert mission elapsed time to mean julian date
@@ -95,7 +97,7 @@ while (t_min+(j*unc*86400)) <= t_max:
 
     try:    
         tmin = t_min + unc*j*86400
-        tmax = t_min + unc*(j+1*count)*86400
+        tmax = t_min + unc*((j+1)*count)*86400
         #print('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', j)
         
         subprocess.run('sed -i \'13s/.*/  tmin: {}/\' config.yaml'.format(tmin), shell=True)
@@ -279,18 +281,13 @@ plt.title("{} Fermi-LAT lightcurve - {}".format(source, mes))
 ax.set_yscale('log')
 #ax.set_xscale('log')
 plt.savefig('lightcurve_{}_{}.png'.format(source2, mes))
-plt.show()
-plt.close()
 
-aaaa = os.listdir(home)
-for i in aaaa:
-    if os.path.isdir(home) == True:
-        subprocess.run( 'cd {}'.format(i) , shell=True )
-        bbb = os.listdir()
-        if bbb.__contains__('sed.txt') == False:
-            subprocess.run( 'cd ..' , shell=True )
-            subprocess.run( 'rm -r {}'.format(i) , shell=True )
-
+for pasta in os.listdir(home):
+    caminho_pasta = os.path.join(home, pasta)
+    if os.path.isdir(caminho_pasta):
+        arquivo_sed = os.path.join(caminho_pasta, 'sed.txt')
+        if not os.path.exists(arquivo_sed):
+            shutil.rmtree(caminho_pasta)
     
 for p in range(0, len(central_time)):
     tmin = mjd_to_met(central_time[p]-central_time_err[p])
@@ -354,3 +351,4 @@ for j in range(0,len(directory)):
         subprocess.run('mv spectral_index.txt spectral_index_{}.txt'.format(directory[j]), shell=True)
         subprocess.run('cp spectral_index_{}.txt {}/spectral_index'.format(directory[j],home), shell=True)
         os.chdir(home)
+
