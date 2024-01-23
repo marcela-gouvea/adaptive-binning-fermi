@@ -74,12 +74,13 @@ file = open('config1.yaml','r')
 lista = file.readlines()
 t_min = int(lista[12].split()[1])
 t_max = int(lista[13].split()[1])
-'''
-source  = str(lista[15].split()[1])+' '+str(lista[15].split()[2])
-source2 = str(lista[15].split()[1])+'_'+str(lista[15].split()[2])
-'''
-source  = str(lista[15].split()[1])
-source2 = str(lista[15].split()[1])
+
+if len(lista[15].split()) == 3:
+    source  = str(lista[15].split()[1])+' '+str(lista[15].split()[2])
+    source2 = str(lista[15].split()[1])+'_'+str(lista[15].split()[2])
+else:
+    source  = str(lista[15].split()[1])
+    source2 = str(lista[15].split()[1])
 
 file.close()
 
