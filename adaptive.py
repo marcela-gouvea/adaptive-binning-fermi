@@ -1,9 +1,8 @@
 from fermipy.gtanalysis import GTAnalysis
 import numpy as np
 import subprocess
-from matplotlib import pyplot as plt #matplotlib.pyplot is the package we will use to plot our light-curve.
-from astropy.table import Table #astropy.table allows us to read fits tables, which is the structure of our ROI file. 
-import os #os lets us easily perform file manipulation within Python.
+from matplotlib import pyplot as plt
+from astropy.table import Table 
 import os
 import shutil
 
@@ -61,14 +60,11 @@ def mean_err(array):
     
 
 unc = 1 #uncertainty - days
-Delta0 = 25
+Delta0 = 25 # ts 
 directory = []
 
 
 fname = 'config.yaml'
-
-#source = 'PKS 1510-089'
-#source2 = 'PKS-1510-089'
 
 file = open('config1.yaml','r')
 lista = file.readlines()
@@ -89,22 +85,20 @@ mes = '2023' # organize folders
 
 home = os.getcwd() # get our current working directory and call it home
 
-n = (t_max-t_min)/(60*60*24*unc)       #number of bins
+n = (t_max-t_min)/(60*60*24*unc) #number of bins
 
-j = 0
-count = 1
+j = 0 # iterator which defines tmin
+count = 1 # iterator which defines tmax
 
 while (t_min+(j*unc*86400)) <= t_max:
 
     try:    
         tmin = t_min + unc*j*86400
         tmax = t_min + unc*((j+1)*count)*86400
-        #print('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', j)
         
         subprocess.run('sed -i \'13s/.*/  tmin: {}/\' config.yaml'.format(tmin), shell=True)
         subprocess.run('sed -i \'14s/.*/  tmax: {}/\' config.yaml'.format(tmax), shell=True)
-        #directory = "{}_{}_{}".format(source2,mes,j)
-
+        
         print('                                                          START ANALYSIS                                                                     \n')
         
         gta = GTAnalysis('config.yaml', logging={'verbosity': 3}, fileio={'outdir': "{}_{}_{}".format(source2,mes,tmax)}) #define our gta object, but with the times from our list
@@ -131,26 +125,25 @@ while (t_min+(j*unc*86400)) <= t_max:
 
         if (results['ts'][0]) >= Delta0:
             print("\n                                                          ACCEPTANCE CRITERIA SATISFIED                                                                     \n'")
-
         
             # save the SED values
             np.savetxt('sed.txt', np.c_[sed['dnde'],sed['e2dnde'],sed['e2dnde_err']], delimiter=';', header='dnde;e2dnde;e2dnde_err')
             
-                # save the spectral index values
+            # save the spectral index values
             np.savetxt('spectral_index.txt', np.c_[sed['param_values'][1],sed['param_errors'][1],sed['param_values'][2], sed['param_errors'][2]], delimiter=';', header='alpha;alpha_err;beta;beta_err')
                 
-                # save the lightcurve values
+            # save the lightcurve values
             #results = Table.read("{}_{}_fit_{}".format(source, mes,j) + ".fits")
             np.savetxt('lightcurve_{}.txt'.format(j), np.c_[met_to_mjd( np.mean([tmin, tmax]) ), unc*count/2, results['eflux'][0], results['eflux_err'][0], count], delimiter=';', header='time;time_err;flux;flux_error;binsize')
                 
             os.chdir(home) # close the directory
                 
-                # save the lightcurve values in the final txt file
+            # save the lightcurve values in the final txt file
             file2 = open('total_lightcurve.txt', 'a')
             file2.write('\n{};{};{};{};{}'.format( met_to_mjd( np.mean([tmin, tmax]) ), unc*count/2, results['eflux'][0] , results['eflux_err'][0], count*unc ))
             file2.close()
 
-            j += 1
+            j += count
             count = 1
 
         else:
@@ -161,11 +154,6 @@ while (t_min+(j*unc*86400)) <= t_max:
             print('------------------------------------------------        {}        ------------------------------------------------\n'.format(count))
             print("Bin size: {} \n".format(count))
             count += 1
-            
-            #subprocess.run('rm -r {}_{}_{}'.format(source2,mes,j) , shell=True)
-            
-            #if tmax >= t_max:
-            #    break
 
         
         print('                                                          END ANALYSIS                                                                     ')
@@ -352,4 +340,3 @@ for j in range(0,len(directory)):
         subprocess.run('mv spectral_index.txt spectral_index_{}.txt'.format(directory[j]), shell=True)
         subprocess.run('cp spectral_index_{}.txt {}/spectral_index'.format(directory[j],home), shell=True)
         os.chdir(home)
-
