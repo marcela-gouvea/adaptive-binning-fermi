@@ -2,7 +2,7 @@ from fermipy.gtanalysis import GTAnalysis
 import numpy as np
 import subprocess
 from matplotlib import pyplot as plt
-from astropy.table import Table 
+from astropy.table import Table
 import os
 import shutil
 
@@ -134,13 +134,13 @@ while (t_min+(j*unc*86400)) <= t_max:
                 
             # save the lightcurve values
             #results = Table.read("{}_{}_fit_{}".format(source, mes,j) + ".fits")
-            np.savetxt('lightcurve_{}.txt'.format(j), np.c_[met_to_mjd( np.mean([tmin, tmax]) ), unc*count/2, results['eflux'][0], results['eflux_err'][0], count], delimiter=';', header='time;time_err;flux;flux_error;binsize')
+            np.savetxt('lightcurve_{}.txt'.format(j), np.c_[( np.mean([met_to_mjd(tmin), met_to_mjd(tmax)]) ), unc*count/2, results['eflux'][0], results['eflux_err'][0], count], delimiter=';', header='time;time_err;flux;flux_error;binsize')
                 
             os.chdir(home) # close the directory
                 
             # save the lightcurve values in the final txt file
             file2 = open('total_lightcurve.txt', 'a')
-            file2.write('\n{};{};{};{};{}'.format( met_to_mjd( np.mean([tmin, tmax]) ), unc*count/2, results['eflux'][0] , results['eflux_err'][0], count*unc ))
+            file2.write('\n{};{};{};{};{}'.format( np.mean([met_to_mjd(tmin), met_to_mjd(tmax)]), unc*count/2, results['eflux'][0] , results['eflux_err'][0], count*unc ))
             file2.close()
 
             j += count
