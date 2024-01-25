@@ -5,6 +5,9 @@ from matplotlib import pyplot as plt
 from astropy.table import Table
 import os
 import shutil
+import faulthandler
+
+faulthandler.enable()
 
 def met_to_mjd(time):
     #Convert mission elapsed time to mean julian date
@@ -80,12 +83,12 @@ else:
 
 file.close()
 
-mes = '2023' # organize folders
+period = '2023' # organize folders
 
 
 home = os.getcwd() # get our current working directory and call it home
 
-n = (t_max-t_min)/(60*60*24*unc) #number of bins
+#n = (t_max-t_min)/(60*60*24*unc) #number of bins
 
 j = 0 # iterator which defines tmin
 count = 1 # iterator which defines tmax
@@ -94,14 +97,14 @@ while (t_min+(j*unc*86400)) <= t_max:
 
     try:    
         tmin = t_min + unc*j*86400
-        tmax = t_min + unc*((j+1)*count)*86400
+        tmax = t_min + unc*(j+count)*86400
         
         subprocess.run('sed -i \'13s/.*/  tmin: {}/\' config.yaml'.format(tmin), shell=True)
         subprocess.run('sed -i \'14s/.*/  tmax: {}/\' config.yaml'.format(tmax), shell=True)
         
         print('                                                          START ANALYSIS                                                                     \n')
         
-        gta = GTAnalysis('config.yaml', logging={'verbosity': 3}, fileio={'outdir': "{}_{}_{}".format(source2,mes,tmax)}) #define our gta object, but with the times from our list
+        gta = GTAnalysis('config.yaml', logging={'verbosity': 3}, fileio={'outdir': "{}_{}".format(tmin,tmax)}) #define our gta object, but with the tiperiod from our list
         gta.setup() #photon selection, good time intervals, livetime cube, binning etc
         
         print('\n                                                          PASS GTA.SETUP()                                                                     \n')
@@ -116,12 +119,12 @@ while (t_min+(j*unc*86400)) <= t_max:
         print('\n                                                          PASS SED                                                                     \n')
         
         sed = gta.sed('{}'.format(source), outfile='sed.fits')
-        gta.write_roi("{}_{}_fit_{}".format(source, mes,tmax)) #save our ROI
+        gta.write_roi("{}_{}_fit_{}_{}".format(source, period,tmin,tmax)) #save our ROI
         
-        os.chdir("{}_{}_{}".format(source2,mes,tmax)) # open the directory
+        os.chdir("{}_{}".format(tmin,tmax)) # open the directory
             
         # test bin size 
-        results = Table.read("{}_{}_fit_{}".format(source, mes,tmax) + ".fits")
+        results = Table.read("{}_{}_fit_{}_{}".format(source,period,tmin,tmax) + ".fits")
 
         if (results['ts'][0]) >= Delta0:
             print("\n                                                          ACCEPTANCE CRITERIA SATISFIED                                                                     \n'")
@@ -133,7 +136,7 @@ while (t_min+(j*unc*86400)) <= t_max:
             np.savetxt('spectral_index.txt', np.c_[sed['param_values'][1],sed['param_errors'][1],sed['param_values'][2], sed['param_errors'][2]], delimiter=';', header='alpha;alpha_err;beta;beta_err')
                 
             # save the lightcurve values
-            #results = Table.read("{}_{}_fit_{}".format(source, mes,j) + ".fits")
+            #results = Table.read("{}_{}_fit_{}".format(source, period,j) + ".fits")
             np.savetxt('lightcurve_{}.txt'.format(j), np.c_[( np.mean([met_to_mjd(tmin), met_to_mjd(tmax)]) ), unc*count/2, results['eflux'][0], results['eflux_err'][0], count], delimiter=';', header='time;time_err;flux;flux_error;binsize')
                 
             os.chdir(home) # close the directory
@@ -266,11 +269,11 @@ plt.legend(loc='best',numpoints=1)
 plt.grid(linestyle = '--',linewidth = 0.5)
 plt.xlabel('Time (MJD)')
 plt.ylabel(r'Energy Flux ($MeV~cm^{-2}~s^{-1}$)')
-plt.title("{} Fermi-LAT lightcurve - {}".format(source, mes))
+plt.title("{} Fermi-LAT lightcurve - {}".format(source, period))
 ax.set_yscale('log')
 #ax.set_xscale('log')
-plt.savefig('lightcurve_{}_{}.png'.format(source2, mes))
-
+plt.savefig('lightcurve_{}_{}.png'.format(source2, period))
+'''
 for pasta in os.listdir(home):
     caminho_pasta = os.path.join(home, pasta)
     if os.path.isdir(caminho_pasta):
@@ -286,7 +289,7 @@ for p in range(0, len(central_time)):
     subprocess.run('sed -i \'14s/.*/  tmax: {}/\' config.yaml'.format(tmax), shell=True)
     print('                                                          START ANALYSIS                                                                     \n')
         
-    gta = GTAnalysis('config.yaml', logging={'verbosity': 3}, fileio={'outdir': "{}/final-sed/{}_{}_{}".format(home,source2,mes,tmax)}) #define our gta object, but with the times from our list
+    gta = GTAnalysis('config.yaml', logging={'verbosity': 3}, fileio={'outdir': "{}/final-sed/{}_{}_{}".format(home,source2,period,tmax)}) #define our gta object, but with the tiperiod from our list
     gta.setup() #photon selection, good time intervals, livetime cube, binning etc
     
     print('\n                                                          PASS GTA.SETUP()                                                                     \n')
@@ -301,12 +304,12 @@ for p in range(0, len(central_time)):
     print('\n                                                          PASS SED                                                                     \n')
     
     sed = gta.sed('{}'.format(source), outfile='sed.fits')
-    gta.write_roi("{}_{}_fit_{}".format(source, mes,tmax)) #save our ROI
+    gta.write_roi("{}_{}_fit_{}".format(source, period,tmax)) #save our ROI
     
-    os.chdir("{}_{}_{}".format(source2,mes,tmax)) # open the directory
+    os.chdir("{}_{}_{}".format(source2,period,tmax)) # open the directory
         
     # test bin size 
-    results = Table.read("{}_{}_fit_{}".format(source, mes,tmax) + ".fits")
+    results = Table.read("{}_{}_fit_{}".format(source, period,tmax) + ".fits")
 
     # save the SED values
     np.savetxt('sed.txt', np.c_[sed['dnde'],sed['e2dnde'],sed['e2dnde_err']], delimiter=';', header='dnde;e2dnde;e2dnde_err')
@@ -340,3 +343,4 @@ for j in range(0,len(directory)):
         subprocess.run('mv spectral_index.txt spectral_index_{}.txt'.format(directory[j]), shell=True)
         subprocess.run('cp spectral_index_{}.txt {}/spectral_index'.format(directory[j],home), shell=True)
         os.chdir(home)
+'''
