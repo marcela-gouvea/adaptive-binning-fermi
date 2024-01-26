@@ -74,54 +74,58 @@ file.close()
 
 period = '2023' # organize folders
 
-central_time      = np.loadtxt('fixed_bins.txt',delimiter=';')[:,3]
-central_time_err  = np.loadtxt('fixed_bins.txt',delimiter=';')[:,4]
+central_time      = np.loadtxt('total_lightcurve_3C454.3.txt',delimiter=';')[:,3]
+central_time_err  = np.loadtxt('total_lightcurve_3C454.3.txt',delimiter=';')[:,4]
 
-
+'''
 for pasta in os.listdir(home):
     caminho_pasta = os.path.join(home, pasta)
     if os.path.isdir(caminho_pasta):
         arquivo_sed = os.path.join(caminho_pasta, 'sed.txt')
         if not os.path.exists(arquivo_sed):
             shutil.rmtree(caminho_pasta)
-    
+'''
+ 
 for p in range(0, len(central_time)):
     tmin = mjd_to_met(central_time[p]-central_time_err[p])
     tmax = mjd_to_met(central_time[p]+central_time_err[p])
 
-    if (tmin>=t_min) and (tmax<=t_max):
-        subprocess.run('sed -i \'13s/.*/  tmin: {}/\' config.yaml'.format(tmin), shell=True)
-        subprocess.run('sed -i \'14s/.*/  tmax: {}/\' config.yaml'.format(tmax), shell=True)
-        print('                                                          START ANALYSIS                                                                     \n')
+    #if (tmin>=t_min) and (tmax<=t_max):
+    subprocess.run('sed -i \'13s/.*/  tmin: {}/\' config.yaml'.format(tmin), shell=True)
+    subprocess.run('sed -i \'14s/.*/  tmax: {}/\' config.yaml'.format(tmax), shell=True)
+    print('                                                          START ANALYSIS                                                                     \n')
             
-        gta = GTAnalysis('{}/config.yaml'.format(home), logging={'verbosity': 3}, fileio={'outdir': "{}/final-sed/{}_{}".format(home,int(tmin),int(tmax))}) #define our gta object, but with the tiperiod from our list
-        gta.setup() #photon selection, good time intervals, livetime cube, binning etc
-        
-        print('\n                                                          PASS GTA.SETUP()                                                                     \n')
+    gta = GTAnalysis('config.yaml', logging={'verbosity': 3}, fileio={'outdir': "{}_{}".format(int(tmin),int(tmax))}) #define our gta object, but with the tiperiod from our list
+    gta.setup() #photon selection, good time intervals, livetime cube, binning etc
+    
+    print('\n                                                          PASS GTA.SETUP()                                                                     \n')
+    
+    gta.optimize() #initial optimise
+    gta.free_sources(distance=10.0,pars='norm') #frees the point sources
+    gta.free_source('galdiff', pars='norm') #frees the galactic diffuse
+    gta.free_source('isodiff', pars='norm') #frees the isotropic diffuse
+    gta.fit() #full likelihood fit
+    gta.sed(source)#, make_plots="True") #do an SED
+    
+    print('\n                                                          PASS SED                                                                     \n')
+    
+    sed = gta.sed(source, outfile='sed.fits')
+    gta.write_roi("{}_{}_fit_{}_{}".format(source, period,int(tmin),int(tmax))) #save our ROI
+    os.chdir("{}_{}".format(int(tmin),int(tmax))) # open the directory
             
-        gta.optimize() #initial optimise
-        gta.free_sources(distance=10.0,pars='norm') #frees the point sources
-        gta.free_source('galdiff', pars='norm') #frees the galactic diffuse
-        gta.free_source('isodiff', pars='norm') #frees the isotropic diffuse
-        gta.fit() #full likelihood fit
-        gta.sed('{}'.format(source))#, make_plots="True") #do an SED
-        
-        print('\n                                                          PASS SED                                                                     \n')
-        
-        sed = gta.sed('{}'.format(source), outfile='sed.fits')
-        gta.write_roi("{}_{}_fit_{}_{}".format(source, period,int(tmin),int(tmax))) #save our ROI
-        os.chdir("{}_{}".format(int(tmin),int(tmax))) # open the directory
-            
-        # test bin size 
-        results = Table.read("{}_{}_fit_{}_{}".format(source, period,int(tmin),int(tmax)) + ".fits")
+    # test bin size 
+    results = Table.read("{}_{}_fit_{}_{}".format(source, period,int(tmin),int(tmax)) + ".fits")
 
-        # save the SED values
-        np.savetxt('sed.txt', np.c_[sed['dnde'],sed['e2dnde'],sed['e2dnde_err']], delimiter=';', header='dnde;e2dnde;e2dnde_err')
-                
-        # save the spectral index values
-        np.savetxt('spectral_index.txt', np.c_[sed['param_values'][1],sed['param_errors'][1],sed['param_values'][2], sed['param_errors'][2]], delimiter=';', header='alpha;alpha_err;beta;beta_err')
-
-aaa = os.listdir("{}/final-sed".format(home))
+    # save the SED values
+    np.savetxt('sed.txt', np.c_[sed['dnde'],sed['e2dnde'],sed['e2dnde_err']], delimiter=';', header='dnde;e2dnde;e2dnde_err')
+            
+    # save the spectral index values
+    np.savetxt('spectral_index.txt', np.c_[sed['param_values'][1],sed['param_errors'][1],sed['param_values'][2], sed['param_errors'][2]], delimiter=';', header='alpha;alpha_err;beta;beta_err')
+    
+    os.chdir(home)
+    
+    
+aaa = os.listdir(home)#"{}/final-sed".format(home))
 directory = []
 
 for i in range(0,len(aaa)):
