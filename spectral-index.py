@@ -74,8 +74,8 @@ file.close()
 
 period = '2023' # organize folders
 
-central_time      = np.loadtxt('total_lightcurve_3C454.3.txt',delimiter=';')[:,0]
-central_time_err  = np.loadtxt('total_lightcurve_3C454.3.txt',delimiter=';')[:,1]
+central_time      = np.loadtxt('fixed_bins.txt',delimiter=';')[:,3]
+central_time_err  = np.loadtxt('fixed_bins.txt',delimiter=';')[:,4]
 
 '''
 for pasta in os.listdir(home):
