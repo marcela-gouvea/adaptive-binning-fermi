@@ -200,6 +200,8 @@ subprocess.run('cp config1.yaml temp', shell=True)
 subprocess.run('cp files.txt temp', shell=True)
 os.chdir("temp")
 
+home2 = os.getcwd()
+
 new_time = []
 new_time_err1 = []
 new_time_err2 = []
@@ -284,7 +286,7 @@ for p in range(0, len(central_time)):
     #results = Table.read("{}_{}_fit_{}".format(source, period,j) + ".fits")
     np.savetxt('lightcurve_{}.txt'.format(j), np.c_[( np.mean([met_to_mjd(tmin), met_to_mjd(tmax)]) ), unc*count/2, results['eflux'][0], results['eflux_err'][0], count], delimiter=';', header='time;time_err;flux;flux_error;binsize')
                 
-    os.chdir(home) # close the directory
+    os.chdir(home2) # close the directory
                 
             # save the lightcurve values in the final txt file
     file2 = open('fixed_bins.txt', 'a')
@@ -293,11 +295,11 @@ for p in range(0, len(central_time)):
 
     
     
-aaa = os.listdir(home)#"{}/final-sed".format(home))
+aaa = os.listdir(home2)#"{}/final-sed".format(home))
 directory = []
 
 for i in range(0,len(aaa)):
-    if os.path.isdir('{}/{}'.format(home,aaa[i]))==True:
+    if os.path.isdir('{}/{}'.format(home2,aaa[i]))==True:
         directory.append(aaa[i])
 
 
@@ -307,8 +309,8 @@ subprocess.run('mkdir sed', shell=True)
 for j in range(0,len(directory)):
         os.chdir(directory[j])
         subprocess.run('mv sed.txt sed_{}.txt'.format(directory[j]), shell=True)
-        subprocess.run('cp sed_{}.txt {}/sed'.format(directory[j],home), shell=True)
-        os.chdir(home)
+        subprocess.run('cp sed_{}.txt {}/sed'.format(directory[j],home2), shell=True)
+        os.chdir(home2)
 
 
 subprocess.run('mkdir spectral_index', shell=True)
@@ -317,5 +319,5 @@ subprocess.run('mkdir spectral_index', shell=True)
 for j in range(0,len(directory)):
         os.chdir(directory[j])
         subprocess.run('mv spectral_index.txt spectral_index_{}.txt'.format(directory[j]), shell=True)
-        subprocess.run('cp spectral_index_{}.txt {}/spectral_index'.format(directory[j],home), shell=True)
-        os.chdir(home)
+        subprocess.run('cp spectral_index_{}.txt {}/spectral_index'.format(directory[j],home2), shell=True)
+        os.chdir(home2)
