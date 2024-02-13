@@ -9,6 +9,70 @@ import faulthandler
 
 faulthandler.enable()
 
+
+def met_to_mjd(time):
+    #Convert mission elapsed time to mean julian date
+    MJDREFF = 51910
+    MJDREFFI = 7.428703703703703e-4
+    
+    if isinstance(time, (int,float)):
+        # Convert from elapsed seconds to elapsed days
+        elapsed_days = time / 86400.
+        
+        # Add the elapsed days to the refrence epoch
+        MJD = MJDREFF + MJDREFFI + elapsed_days
+
+    else:
+        MJD = []
+        for i in range(0,len(time)):
+            # Convert from elapsed seconds to elapsed days
+            elapsed_days = time[i] / 86400.
+            MJD.append(MJDREFF + MJDREFFI + elapsed_days)
+
+    # Return the MJD in TT format
+    return MJD
+
+def mjd_to_met(time):
+    #Convert mean julian date to mission elapsed time
+    MJDREFF = 51910 * 86400
+    MJDREFFI = 7.428703703703703e-4 * 86400
+    
+    if isinstance(time, (int,float)):
+        # Convert from elapsed days to elapsed seconds
+        elapsed_seconds = time * 86400.
+        
+        # Add the elapsed seconds to the refrence epoch
+        MET = elapsed_seconds - MJDREFF - MJDREFFI
+
+    else:
+        MET = []
+        for i in range(0,len(time)):
+            # Convert from elapsed days to elapsed seconds
+            elapsed_seconds = time[i] * 86400.
+            MET.append(elapsed_seconds - MJDREFF - MJDREFFI)
+
+    # Return the MJD in TT format
+    return MET
+
+fname = 'config.yaml'
+
+file = open('config1.yaml','r')
+lista = file.readlines()
+t_min = int(lista[12].split()[1])
+t_max = int(lista[13].split()[1])
+
+if len(lista[15].split()) == 3:
+    source  = str(lista[15].split()[1])+' '+str(lista[15].split()[2])
+    source2 = str(lista[15].split()[1])+'_'+str(lista[15].split()[2])
+else:
+    source  = str(lista[15].split()[1])
+    source2 = str(lista[15].split()[1])
+
+file.close()
+
+period = '2023' # organize folders
+
+
 # plot the lightcurve
 time      = np.loadtxt('total_lightcurve.txt',delimiter=';')[:,0]
 time_err  = np.loadtxt('total_lightcurve.txt',delimiter=';')[:,1]
