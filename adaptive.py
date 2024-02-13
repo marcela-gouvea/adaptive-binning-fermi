@@ -194,6 +194,11 @@ eflux     = np.loadtxt('total_lightcurve.txt',delimiter=';')[:,2]
 eflux_err = np.loadtxt('total_lightcurve.txt',delimiter=';')[:,3]
 
 ## FIXING BINS
+subprocess.run('mkdir temp', shell=True)
+subprocess.run('cp config.yaml temp', shell=True)
+subprocess.run('cp config1.yaml temp', shell=True)
+subprocess.run('cp files.txt temp', shell=True)
+os.chdir("temp")
 
 new_time = []
 new_time_err1 = []
@@ -282,7 +287,7 @@ for p in range(0, len(central_time)):
     os.chdir(home) # close the directory
                 
             # save the lightcurve values in the final txt file
-    file2 = open('total_lightcurve.txt', 'a')
+    file2 = open('fixed_bins.txt', 'a')
     file2.write('\n{};{};{};{};{}'.format( np.mean([met_to_mjd(tmin), met_to_mjd(tmax)]), unc*count/2, results['eflux'][0] , results['eflux_err'][0], count*unc ))
     file2.close()
 
