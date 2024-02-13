@@ -54,6 +54,8 @@ def mjd_to_met(time):
     # Return the MJD in TT format
     return MET
 
+unc = 1
+
 fname = 'config.yaml'
 
 file = open('config1.yaml','r')
