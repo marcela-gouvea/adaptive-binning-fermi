@@ -172,13 +172,13 @@ for p in range(0, len(central_time)):
     np.savetxt('spectral_index.txt', np.c_[sed['param_values'][1],sed['param_errors'][1],sed['param_values'][2], sed['param_errors'][2]], delimiter=';', header='alpha;alpha_err;beta;beta_err')
     # save the lightcurve values
     #results = Table.read("{}_{}_fit_{}".format(source, period,j) + ".fits")
-    np.savetxt('lightcurve_{}.txt'.format(j), np.c_[( np.mean([met_to_mjd(tmin), met_to_mjd(tmax)]) ), unc*count/2, results['eflux'][0], results['eflux_err'][0], count], delimiter=';', header='time;time_err;flux;flux_error;binsize')
+    np.savetxt('lightcurve_{}.txt'.format(j), np.c_[ central_time[p], central_time_err[p], results['eflux'][0], results['eflux_err'][0], (met_to_mjd(tmax)-met_to_mjd(tmin))], delimiter=';', header='time;time_err;flux;flux_error;binsize')
                 
     os.chdir(home2) # close the directory
                 
             # save the lightcurve values in the final txt file
     file2 = open('fixed_bins.txt', 'a')
-    file2.write('\n{};{};{};{};{}'.format( np.mean([met_to_mjd(tmin), met_to_mjd(tmax)]), unc*count/2, results['eflux'][0] , results['eflux_err'][0], count*unc ))
+    file2.write('\n{};{};{};{};{}'.format( central_time[p], central_time_err[p], results['eflux'][0] , results['eflux_err'][0], (met_to_mjd(tmax)-met_to_mjd(tmin)) ))
     file2.close()
 
     
