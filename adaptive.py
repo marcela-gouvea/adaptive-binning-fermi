@@ -54,14 +54,6 @@ def mjd_to_met(time):
     return MET
 
 
-def mean_err(array):
-    if len(array) != 0:
-        soma = 0
-        for k in range(len(array)):
-            soma += array[k]**2
-        return np.sqrt(soma/len(array))
-    
-
 unc = 1 #uncertainty - days
 Delta0 = 25 # ts 
 directory = []
@@ -203,16 +195,12 @@ eflux_err = np.loadtxt('total_lightcurve.txt',delimiter=';')[:,3]
 
 ## FIXING BINS
 
-new_flux = []
-new_flux_err = []
 new_time = []
 new_time_err1 = []
 new_time_err2 = []
 central_time = []
 central_time_err = []
 
-aux_flux = []
-aux_flux_err = []
 aux_time = []
 aux_time_err = []
 
@@ -229,47 +217,100 @@ while i<len(eflux):
     while ((eflux[i+count]/eflux[i+count+1] <= 1.2) and (eflux[i+count]/eflux[i+count+1] >= 0.8) and (i+count+2)<len(eflux)):
         count += 1
     if count == 0:
-        aux_flux.append(eflux[i])
         aux_time.append(time[i])
-        aux_flux_err.append(eflux_err[i])
         aux_time_err.append(time_err[i])
         aux_bins.append(time[i]-time_err[i])
         aux_bins.append(time[i]+time_err[i])
     else:
         for j in range(count):
-            aux_flux.append(eflux[i+j])
             aux_time.append(time[i+j])
-            aux_flux_err.append(eflux_err[i+j])
             aux_time_err.append(time_err[i+j])
             aux_bins.append(time[i+j]-time_err[i+j])
             aux_bins.append(time[i+j]+time_err[i+j])
 
-    new_flux.append(np.mean(aux_flux))
-    new_flux_err.append(mean_err(aux_flux_err))
     new_time.append(np.mean(aux_time))
     new_time_err1.append(new_time[-1]-min(aux_bins))
     new_time_err2.append(max(aux_bins)-new_time[-1])
     central_time.append((2*new_time[-1]+new_time_err2[-1]-new_time_err1[-1])/2)
     central_time_err.append((new_time_err1[-1]+new_time_err2[-1])/2)
-    
-    aux_flux.clear()
-    aux_flux_err.clear()
+
     aux_time.clear()
     aux_time_err.clear()
     aux_bins.clear()
     i += (count + 1)
 
+ 
+for p in range(0, len(central_time)):
+    tmin = mjd_to_met(central_time[p]-central_time_err[p])
+    tmax = mjd_to_met(central_time[p]+central_time_err[p])
 
-np.savetxt("fixed_bins.txt", np.c_[new_time, new_time_err1, new_time_err2, central_time, central_time_err, new_flux, new_flux_err], delimiter=';', header="assym_time;assym_time_err_1;assym_time_err_2;central_time;central_time_error;flux;flux_err")
+    #if (tmin>=t_min) and (tmax<=t_max):
+    subprocess.run('sed -i \'13s/.*/  tmin: {}/\' config.yaml'.format(tmin), shell=True)
+    subprocess.run('sed -i \'14s/.*/  tmax: {}/\' config.yaml'.format(tmax), shell=True)
+    print('                                                          START ANALYSIS                                                                     \n')
+            
+    gta = GTAnalysis('config.yaml', logging={'verbosity': 3}, fileio={'outdir': "{}_{}".format(int(tmin),int(tmax))}) #define our gta object, but with the tiperiod from our list
+    gta.setup() #photon selection, good time intervals, livetime cube, binning etc
+    
+    print('\n                                                          PASS GTA.SETUP()                                                                     \n')
+    
+    gta.optimize() #initial optimise
+    gta.free_sources(distance=10.0,pars='norm') #frees the point sources
+    gta.free_source('galdiff', pars='norm') #frees the galactic diffuse
+    gta.free_source('isodiff', pars='norm') #frees the isotropic diffuse
+    gta.fit() #full likelihood fit
+    gta.sed(source)#, make_plots="True") #do an SED
+    
+    print('\n                                                          PASS SED                                                                     \n')
+    
+    sed = gta.sed(source, outfile='sed.fits')
+    gta.write_roi("{}_{}_fit_{}_{}".format(source, period,int(tmin),int(tmax))) #save our ROI
+    os.chdir("{}_{}".format(int(tmin),int(tmax))) # open the directory
+            
+    # test bin size 
+    results = Table.read("{}_{}_fit_{}_{}".format(source, period,int(tmin),int(tmax)) + ".fits")
 
-fig, ax = plt.subplots()
-plt.errorbar(x = central_time, xerr = central_time_err, y = new_flux , yerr = new_flux_err , fmt='o' , ecolor='k', capsize = 5, markersize=4)
-plt.legend(loc='best',numpoints=1)
-#plt.xlim([met_to_mjd(t_start), met_to_mjd(t_end)])
-plt.grid(linestyle = '--',linewidth = 0.5)
-plt.xlabel('Time (MJD)')
-plt.ylabel(r'Energy Flux ($MeV~cm^{-2}~s^{-1}$)')
-plt.title("{} Fermi-LAT lightcurve - {}".format(source, period))
-ax.set_yscale('log')
-#ax.set_xscale('log')
-plt.savefig('lightcurve_{}_{}.png'.format(source2, period))
+    # save the SED values
+    np.savetxt('sed.txt', np.c_[sed['dnde'],sed['e2dnde'],sed['e2dnde_err']], delimiter=';', header='dnde;e2dnde;e2dnde_err')
+            
+    # save the spectral index values
+    np.savetxt('spectral_index.txt', np.c_[sed['param_values'][1],sed['param_errors'][1],sed['param_values'][2], sed['param_errors'][2]], delimiter=';', header='alpha;alpha_err;beta;beta_err')
+    # save the lightcurve values
+    #results = Table.read("{}_{}_fit_{}".format(source, period,j) + ".fits")
+    np.savetxt('lightcurve_{}.txt'.format(j), np.c_[( np.mean([met_to_mjd(tmin), met_to_mjd(tmax)]) ), unc*count/2, results['eflux'][0], results['eflux_err'][0], count], delimiter=';', header='time;time_err;flux;flux_error;binsize')
+                
+    os.chdir(home) # close the directory
+                
+            # save the lightcurve values in the final txt file
+    file2 = open('total_lightcurve.txt', 'a')
+    file2.write('\n{};{};{};{};{}'.format( np.mean([met_to_mjd(tmin), met_to_mjd(tmax)]), unc*count/2, results['eflux'][0] , results['eflux_err'][0], count*unc ))
+    file2.close()
+
+    
+    
+aaa = os.listdir(home)#"{}/final-sed".format(home))
+directory = []
+
+for i in range(0,len(aaa)):
+    if os.path.isdir('{}/{}'.format(home,aaa[i]))==True:
+        directory.append(aaa[i])
+
+
+subprocess.run('mkdir sed', shell=True)
+
+
+for j in range(0,len(directory)):
+        os.chdir(directory[j])
+        subprocess.run('mv sed.txt sed_{}.txt'.format(directory[j]), shell=True)
+        subprocess.run('cp sed_{}.txt {}/sed'.format(directory[j],home), shell=True)
+        os.chdir(home)
+
+
+subprocess.run('mkdir spectral_index', shell=True)
+
+
+for j in range(0,len(directory)):
+        os.chdir(directory[j])
+        subprocess.run('mv spectral_index.txt spectral_index_{}.txt'.format(directory[j]), shell=True)
+        subprocess.run('cp spectral_index_{}.txt {}/spectral_index'.format(directory[j],home), shell=True)
+        os.chdir(home)
