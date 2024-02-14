@@ -104,10 +104,12 @@ aux_bins = []
 i = 0 
 count = 0
 
+# 0 [1 2] 3
+# 
 
 while i<len(eflux):
-    if (i+count+1)>= (len(eflux)):
-            break
+    if (i+count+1) >= (len(eflux)):
+        break
     count = 0
     while ((eflux[i+count]/eflux[i+count+1] <= 1.2) and (eflux[i+count]/eflux[i+count+1] >= 0.8) and (i+count+2)<len(eflux)):
         count += 1
@@ -117,7 +119,7 @@ while i<len(eflux):
         aux_bins.append(time[i]-time_err[i])
         aux_bins.append(time[i]+time_err[i])
     else:
-        for j in range(count):
+        for j in range(count+1):
             aux_time.append(time[i+j])
             aux_time_err.append(time_err[i+j])
             aux_bins.append(time[i+j]-time_err[i+j])
@@ -134,7 +136,7 @@ while i<len(eflux):
     aux_bins.clear()
     i += (count + 1)
 
- 
+
 for p in range(0, len(central_time)):
     tmin = mjd_to_met(central_time[p]-central_time_err[p])
     tmax = mjd_to_met(central_time[p]+central_time_err[p])
@@ -180,6 +182,9 @@ for p in range(0, len(central_time)):
     file2 = open('fixed_bins.txt', 'a')
     file2.write('\n{};{};{};{};{}'.format( central_time[p], central_time_err[p], results['eflux'][0] , results['eflux_err'][0], (met_to_mjd(tmax)-met_to_mjd(tmin)) ))
     file2.close()
+
+    print('\n---------------------------------------------        LOADING {} %      ---------------------------------------------'.format(p/len(central_time)*100))
+    
 
     
     
