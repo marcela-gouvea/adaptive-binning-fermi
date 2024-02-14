@@ -214,3 +214,23 @@ for j in range(0,len(directory)):
         subprocess.run('mv spectral_index.txt spectral_index_{}.txt'.format(directory[j]), shell=True)
         subprocess.run('cp spectral_index_{}.txt {}/spectral_index'.format(directory[j],home2), shell=True)
         os.chdir(home2)
+
+os.chdir(f'{home2}/spectral_index')
+
+
+alpha = []
+alpha_err = []
+beta = []
+beta_err = []
+
+for i in os.listdir():
+    alpha.append( np.loadtxt(i, delimiter=';')[0] )
+    alpha_err.append( np.loadtxt(i, delimiter=';')[1] )
+    beta.append( np.loadtxt(i, delimiter=';')[2] )
+    beta_err.append( np.loadtxt(i, delimiter=';')[3] )
+
+os.chdir(home2)
+
+np.savetxt('spectral_index.txt', np.c_[alpha,alpha_err,beta,beta_err], delimiter=';',header='alpha;alpha_err;beta;beta_err')
+
+
