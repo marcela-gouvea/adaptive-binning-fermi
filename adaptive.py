@@ -135,7 +135,7 @@ while (t_min+(j*unc*86400)) <= t_max:
                 
             # save the lightcurve values in the final txt file
             file2 = open('total_lightcurve.txt', 'a')
-            file2.write('\n{};{};{};{};{}'.format( np.mean([met_to_mjd(tmin), met_to_mjd(tmax)]), unc*count/2, results['eflux'][0] , results['eflux_err'][0], count*unc ))
+            file2.write('\n{};{};{};{};{};{};{};{};{}'.format( np.mean([met_to_mjd(tmin), met_to_mjd(tmax)]), unc*count/2, results['eflux'][0] , results['eflux_err'][0], count*unc, sed['param_values'][1], sed['param_errors'][1], sed['param_values'][2], sed['param_errors'][2]] ))
             file2.close()
 
             j += count
