@@ -1,12 +1,10 @@
 # Adaptive Binning for Fermi-LAT Analysis
 
-This repository presents an Adaptive-Binning method to be used for Fermi-LAT data analysis using the fermipy lib
+This repository presents an Adaptive-Binning method to be used for Fermi-LAT data analysis using the fermipy lib. 
 
 ## Requisites:
 
 Numpy - https://numpy.org/
-
-Matplotlib - https://matplotlib.org/
 
 Fermipy - https://fermipy.readthedocs.io/en/latest/
 
