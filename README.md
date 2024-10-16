@@ -10,6 +10,8 @@ Fermipy - https://fermipy.readthedocs.io/en/latest/
 
 Astropy - https://www.astropy.org/
 
+You can use the same environment used for Fermipy analysis
+
 ## Usage
 
 To use our codes, you should know:
