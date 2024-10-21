@@ -3,6 +3,7 @@
 This repository presents an Adaptive-Binning method to be used for Fermi-LAT data analysis using the fermipy lib. The method allows the creation of more significant light curves. Each bin size is adjusted by requiring a minimum significance ```TS >= 𝜹₀``` in which TS is the test statistics and 𝜹₀ is what we call acceptance criteria. The minimun bin size is established by a variable we call unc 
 
 Deafults: 
+
 ```𝜹₀ = 25```
 
 ```unc = 1```
