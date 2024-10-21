@@ -10,10 +10,6 @@ Deafults:
 
 Remember to change these according to your purposes
 
-![Análise_de_dados_temporais_do_Fermi-LAT_com_binagem_adaptativa__1_-removebg-preview](https://github.com/user-attachments/assets/a21ead11-81b7-4abf-a2d6-6f78c85420c9)
-
-
-
 ## Requisites:
 
 Numpy - https://numpy.org/
