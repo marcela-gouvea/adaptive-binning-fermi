@@ -4,6 +4,7 @@ This repository presents an Adaptive-Binning method to be used for Fermi-LAT dat
 
 Deafults: 
 ```𝜹₀ = 25```
+
 ```unc = 1```
 
 ## Requisites:
