@@ -26,7 +26,7 @@ To use our codes, you should know:
 - First, download our codes and create a folder for the analysis;
 - Change ```𝜹₀``` and ```unc``` according to your criteria;
 - Before running the code, you must create a "files.txt" file which contains the whole path to the photon files. Also, create a configuration file for the analysis and a copy (one named "config.yaml" and "config1.yaml").
-- You must put the whole path to the spacecraft file in the configuration. Your config file must be similar to the following exemple in order for the code to work. Make sure that the ```tmin```, ```tmax``` and ```targe``` are on the same lines as this. We are still working to improve the config reading. The code does not support double selection.
+- Your config file must be similar to the following exemple in order for the code to work. You must put the whole path to the spacecraft file in the configuration. Also, make sure that the ```tmin```, ```tmax``` and ```target``` are on lines 11, 12 and 14, respectively. We are still working to improve the config reading. The code does not support double selection.
   
  ```
 data:
